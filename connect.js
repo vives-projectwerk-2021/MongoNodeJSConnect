@@ -1,3 +1,4 @@
+const { exists } = require('fs');
 const {MongoClient} = require ('mongodb');
 const { consumers } = require('stream');
 
@@ -48,11 +49,17 @@ async function main(){
 
         //await findListingByName(client,"Infinite Views");
 
-        await findListingsWithMinimumBedroomBathroomsAndMostRecentReviews(client, {
+        /* await findListingsWithMinimumBedroomBathroomsAndMostRecentReviews(client, {
             minimumNumberOfBathrooms:4,
             minimumNumberOfBathrooms:2,
             maximumNumberOfResults:5
-        });
+        }); */
+
+        //await updateListingByName(client,"Infinite Views",{bedrooms:6, beds:8});
+
+        //await upsertListingByName(client,"Cosy Cottage",{name:"Cozy Cottage"},{bedrooms:2},{bathrooms:2});
+
+        await updateAllListingsToHavePropertyType(client);
 
     }catch(e){
         console.error(e);
@@ -142,4 +149,36 @@ async function createMultipleListings(client,newListings){
     console.log(result.insertedIds)
 }
 
+
+//UPDATE
+
+//update 1 document
+async function updateListingByName(client,nameOfListing,updatedListing){
+    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateOne({name:nameOfListing},{$set: updatedListing});
+
+    console.log(`${result.matchedCount} document(s) matched the query criteria`);
+    console.log(`${result.modifiedCount} documents was/were updated`)
+}
+
+//upsert checks it doc already exist, if it does, it updates it, if not, it creates a new document
+async function upsertListingByName(client,nameOfListing,updatedListing){
+    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateOne({name:nameOfListing},{$set: updatedListing},{upsert:true});
+
+    console.log(`${result.matchedCount} document(s) matched the query criteria`);
+
+    if(result.upsertedCount>0){
+        console.log(`One doc was inserted with id ${result.upsertedId}`);
+    }else{
+        console.log(`${result.modifiedCount} documents was/were updated`);
+    }
+}
+
+//updates all listings to have a certain variable
+async function updateAllListingsToHavePropertyType(client){
+    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateMany(
+        {property_type:{$exists: false}}, {$set:{property_type:"Unknown"}});
+
+    console.log(`${result.matchedCount} document(s) matched the query criteria`);
+    console.log(`${result.modifiedCount} documents was/were updated`);
+}
 
