@@ -59,7 +59,11 @@ async function main(){
 
         //await upsertListingByName(client,"Cosy Cottage",{name:"Cozy Cottage"},{bedrooms:2},{bathrooms:2});
 
-        await updateAllListingsToHavePropertyType(client);
+        //await updateAllListingsToHavePropertyType(client);
+
+        //await deleteListingByName(client,"Cozy Cottage");
+        await deleteAllListingsScrapedBeforeDate(client, new Date("2019-02-15"));
+        
 
     }catch(e){
         console.error(e);
@@ -182,3 +186,23 @@ async function updateAllListingsToHavePropertyType(client){
     console.log(`${result.modifiedCount} documents was/were updated`);
 }
 
+
+
+//DELETE
+
+//deleteOne deletes only 1 matching document
+async function deleteListingByName(client, nameOfListing){
+    result= await client.db("sample_airbnb").collection("listingsAndReviews").deleteOne({name:nameOfListing});
+
+    console.log(`${result.deletedCount} document(s) were deleted`);
+}
+
+//deletes all documents matching the query (here docs older than stated date)
+async function deleteAllListingsScrapedBeforeDate(client,date){
+    result= await client.db("sample_airbnb").collection("listingsAndReviews").deleteMany(
+        {"last_scraped":{$lt:date}});
+
+    console.log(`${result.deletedCount} document(s) were deleted`);
+    
+
+}
