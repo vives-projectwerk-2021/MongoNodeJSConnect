@@ -13,57 +13,28 @@ async function main(){
 
         //call functions
 
-        //await listDataBases(client);
-
-        /* await createListing(client,{
-            name: "Lovely Loft",
-            summary: "A charming",
-            bedrooms: 1,
-            bathrooms: 1
-        }) */
-
-        /* await createMultipleListings(client,[
-            {
-                name: "Infinite Views",
-                summary: "Modern home with infinite views from the infinity pool",
-                property_type: "House",
-                bedrooms: 5,
-                bathrooms: 4.5,
-                beds: 5
-            },
-            {
-                name: "Private room in London",
-                property_type: "Apartment",
-                bedrooms: 1,
-                bathroom: 1
-            },
-            {
-                name: "Beautiful Beach House",
-                summary: "Enjoy relaxed beach living in this house with a private beach",
-                bedrooms: 4,
-                bathrooms: 2.5,
-                beds: 7,
-                last_review: new Date()
-            }
-        ]) */
-
-        //await findListingByName(client,"Infinite Views");
-
-        /* await findListingsWithMinimumBedroomBathroomsAndMostRecentReviews(client, {
-            minimumNumberOfBathrooms:4,
-            minimumNumberOfBathrooms:2,
-            maximumNumberOfResults:5
-        }); */
-
-        //await updateListingByName(client,"Infinite Views",{bedrooms:6, beds:8});
-
-        //await upsertListingByName(client,"Cosy Cottage",{name:"Cozy Cottage"},{bedrooms:2},{bathrooms:2});
-
-        //await updateAllListingsToHavePropertyType(client);
-
-        //await deleteListingByName(client,"Cozy Cottage");
-        await deleteAllListingsScrapedBeforeDate(client, new Date("2019-02-15"));
         
+        //Login
+        //await findUserByUserName(client,"AaronFreddy","Coolguy69");
+        //await findAllUsers(client);
+
+        //Sign Up
+        //await createUser(client,"Luc","GameOver");
+
+        //Change Password
+        //await changePassword(client,"Luc","GameOver","LOL");
+
+        //Delete User
+        //await deleteUser(client,"Luc","StartGame",true);
+
+
+
+        //POSSIBLE FUTURE FEATURES
+        //Delete Users older then (no date data for users yet)
+        //await deleteAllUsersBeforeDate(client, new Date("2019-02-15"));
+
+        //Add variable to all accounts(can be handy later on)
+        //await updateAddVariable(client);
 
     }catch(e){
         console.error(e);
@@ -90,97 +61,72 @@ async function listDataBases(client){
     })
 }
 
-
-//returns 1 matching document with the query (even if more documents match)
-async function findListingByName(client, nameOfListing){
-    result = await client.db("sample_airbnb").collection("listingsAndReviews").findOne({name:nameOfListing})
+//LOGIN
+//checks if there is a user with both the right username AND  right password
+async function findUserByUserName(client, name,psswrd){
+    result = await client.db("Project").collection("accounts").findOne({$and:[{username:name},{password:psswrd}]})
 
     if (result){
-        console.log(`Found a listing in collection with name '${nameOfListing}'`);
+        console.log(`Found a user in collection with name '${name}'`);
         console.log(result);
     }else{
-        console.log(`No listings were found with name '${nameOfListing}'`);
+        console.log(`No users were found with name '${name}'`);
     }
 }
 
-//return s all matching documents with the query
-async function findListingsWithMinimumBedroomBathroomsAndMostRecentReviews(client,{
-    minimumNumberOfBedrooms=0,
-    minimumNumberOfBathrooms=0,
-    maximumNumberOfResults=Number.MAX_SAFE_INTEGER
-}={}){
-    cursor = await client.db("sample_airbnb").collection("listingsAndReviews").find({
-        bedrooms:{$gte: minimumNumberOfBedrooms},
-        bathrooms:{$gte: minimumNumberOfBathrooms}
-    }).sort({ last_review: -1}).limit(maximumNumberOfResults);
+//SHOW ALL USERS
+//returns all matching documents with the query
+async function findAllUsers(client){
+    result = await client.db("Project").collection("accounts").find({}).toArray();
+
+    console.log(`Found ${result.length} users in database`);
+    console.log(result);
+   
+}
+
+
+//SIGN UP
+
+//checks if user already exits and if it doesn't, creates a new user
+async function createUser(client,name,psswrd){
+    result = await client.db("Project").collection("accounts").findOne({username:name});
+
+    if (result){
+        console.log(`There is already a user with name '${name}'`);
+    }else{
+        createNew = await client.db("Project").collection("accounts").insertOne({username:name,password:psswrd});
+
+        console.log(`New user created with the following id : ${createNew.insertedId} and username: ${name}`);
+    }
     
-    results = await cursor.toArray();
-
-    // Print the results
-    if (results.length > 0) {
-        console.log(`Found listing(s) with at least ${minimumNumberOfBedrooms} bedrooms and ${minimumNumberOfBathrooms} bathrooms:`);
-        results.forEach((result, i) => {
-            const date = new Date(result.last_review).toDateString();
-
-            console.log();
-            console.log(`${i + 1}. name: ${result.name}`);
-            console.log(`   _id: ${result._id}`);
-            console.log(`   bedrooms: ${result.bedrooms}`);
-            console.log(`   bathrooms: ${result.bathrooms}`);
-            console.log(`   most recent review date: ${date}`);
-        });
-    } else {
-        console.log(`No listings found with at least ${minimumNumberOfBedrooms} bedrooms and ${minimumNumberOfBathrooms} bathrooms`);
-    }
-}
-
-
-//CREATE
-
-//creates a (1) new set of data into a certain DB 
-async function createListing(client,newListing){
-    result = await client.db("sample_airbnb").collection("listingsAndReviews").insertOne(newListing);
-
-    console.log(`New listing created with the following id : ${result.insertedId}`);
 
 }
 
-//creates multiple sets of data into a certain DB
-async function createMultipleListings(client,newListings){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").insertMany(newListings);
-
-    console.log(`${result.insertedCount} new listings created with following id(s): ;`);
-    console.log(result.insertedIds)
-}
 
 
 //UPDATE
 
-//update 1 document
-async function updateListingByName(client,nameOfListing,updatedListing){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateOne({name:nameOfListing},{$set: updatedListing});
+//change password
+async function changePassword(client,name,psswrd,newPsswrd){
+    changePsswd = await client.db("Project").collection("accounts").findOne({$and:[{username:name},{password:psswrd}]})
 
-    console.log(`${result.matchedCount} document(s) matched the query criteria`);
-    console.log(`${result.modifiedCount} documents was/were updated`)
-}
+    if (changePsswd){
 
-//upsert checks it doc already exist, if it does, it updates it, if not, it creates a new document
-async function upsertListingByName(client,nameOfListing,updatedListing){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateOne({name:nameOfListing},{$set: updatedListing},{upsert:true});
-
-    console.log(`${result.matchedCount} document(s) matched the query criteria`);
-
-    if(result.upsertedCount>0){
-        console.log(`One doc was inserted with id ${result.upsertedId}`);
+        result= await client.db("Project").collection("accounts").updateOne({$and:[{username:name},{password:psswrd}]},{$set: {password:newPsswrd}});
+        console.log(`Changed password of user "${name}"`);
     }else{
-        console.log(`${result.modifiedCount} documents was/were updated`);
+        console.log("Wrong username or password");
     }
+
+    
 }
+
+
 
 //updates all listings to have a certain variable
-async function updateAllListingsToHavePropertyType(client){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").updateMany(
-        {property_type:{$exists: false}}, {$set:{property_type:"Unknown"}});
+async function updateAddVariable(client){
+    result= await client.db("Project").collection("accounts").updateMany(
+        {variable:{$exists: false}}, {$set:{variable:"Empty"}});
 
     console.log(`${result.matchedCount} document(s) matched the query criteria`);
     console.log(`${result.modifiedCount} documents was/were updated`);
@@ -191,16 +137,22 @@ async function updateAllListingsToHavePropertyType(client){
 //DELETE
 
 //deleteOne deletes only 1 matching document
-async function deleteListingByName(client, nameOfListing){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").deleteOne({name:nameOfListing});
+async function deleteUser(client, name,psswrd,sure){
+    deleteAcc = await client.db("Project").collection("accounts").findOne({$and:[{username:name},{password:psswrd}]})
 
-    console.log(`${result.deletedCount} document(s) were deleted`);
+    if (deleteAcc && sure){
+
+        result= await client.db("Project").collection("accounts").deleteOne({$and:[{username:name},{password:psswrd}]});
+        console.log(`Deleted user "${name}"`);
+    }else{
+        console.log("Wrong username or password or sure is set to false");
+    }
 }
 
-//deletes all documents matching the query (here docs older than stated date)
-async function deleteAllListingsScrapedBeforeDate(client,date){
-    result= await client.db("sample_airbnb").collection("listingsAndReviews").deleteMany(
-        {"last_scraped":{$lt:date}});
+//deletes all users matching the query (here users older than stated date)
+async function deleteAllUsersBeforeDate(client,date){
+    result= await client.db("Project").collection("accounts").deleteMany(
+        {"made_at_date":{$lt:date}});
 
     console.log(`${result.deletedCount} document(s) were deleted`);
     
