@@ -1,6 +1,7 @@
 const { exists } = require('fs');
 const {MongoClient} = require ('mongodb');
 const { consumers } = require('stream');
+CryptoJS=require('crypto-js')
 
 async function main(){
     // this uri can be found in the MongoDB Atlas under "connect" and then "connect you application" (remember to change "<password>" to actual password)
@@ -11,21 +12,28 @@ async function main(){
     try{
         await client.connect();
 
-        //call functions
+        user="ERIK";
+        psswrd="HYPOPOTTOMONSTROSES";
 
+
+        //call functions
         
+        //encryptor
+        encrypted=CryptoJS.SHA256(psswrd).toString(CryptoJS.enc.Base64);
+        
+
         //Login
-        //await findUserByUserName(client,"AaronFreddy","Coolguy69");
+        //await findUserByUserName(client,user,encrypted);
         //await findAllUsers(client);
 
         //Sign Up
-        //await createUser(client,"Luc","GameOver");
+        //await createUser(client,user,encrypted);
 
         //Change Password
         //await changePassword(client,"Luc","GameOver","LOL");
 
         //Delete User
-        //await deleteUser(client,"Luc","StartGame",true);
+        //await deleteUser(client,user,encrypted,true);
 
 
 
@@ -67,10 +75,10 @@ async function findUserByUserName(client, name,psswrd){
     result = await client.db("Project").collection("accounts").findOne({$and:[{username:name},{password:psswrd}]})
 
     if (result){
-        console.log(`Found a user in collection with name '${name}'`);
+        console.log(`Found a user in collection with name '${name}' and that password`);
         console.log(result);
     }else{
-        console.log(`No users were found with name '${name}'`);
+        console.log(`No users were found with name '${name}' and that password.`);
     }
 }
 
