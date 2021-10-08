@@ -1,5 +1,5 @@
 # Container image that runs your code
-FROM alpine:3.10
+FROM node:lts-alpine as build-stage
 
 RUN apk add --update nodejs npm
 
