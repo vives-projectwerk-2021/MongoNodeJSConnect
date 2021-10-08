@@ -1,5 +1,5 @@
 # Container image that runs your code
-FROM node:lts-alpine as build-stage
+FROM alpine:3.10
 
 RUN apk add --update nodejs npm
 
@@ -7,10 +7,9 @@ RUN apk add --update nodejs npm
 WORKDIR /app
 COPY . .
 
+RUN npm install
 RUN npm install mongodb
 RUN npm install crypto-js
-
-EXPOSE 8080 
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 CMD ["node", "connect"]
