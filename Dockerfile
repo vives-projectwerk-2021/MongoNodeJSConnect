@@ -7,9 +7,10 @@ RUN apk add --update nodejs npm
 WORKDIR /app
 COPY . .
 
-RUN npm install
 RUN npm install mongodb
 RUN npm install crypto-js
+
+EXPOSE 8080 
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 CMD ["node", "connect"]
